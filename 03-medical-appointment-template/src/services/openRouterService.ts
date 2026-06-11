@@ -1,43 +1,30 @@
-import { ChatOpenAI } from "@langchain/openai"
+import { OpenRouter } from "@openrouter/sdk"
 import { config, type ModelConfig } from "../config.ts"
 import { z } from "zod/v3"
-import {
-	createAgent,
-	HumanMessage,
-	providerStrategy,
-	SystemMessage,
-} from "langchain"
-import { success } from "zod/v4"
 
 export type LLMResponse = {
 	model: string
 	content: string
 }
 
+function parseJsonContent(content: string): unknown {
+	const trimmed = content.trim()
+	const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i)
+	const jsonText = fenced ? fenced[1] : trimmed
+	return JSON.parse(jsonText)
+}
+
 export class OpenRouterService {
+	private client: OpenRouter
 	private config: ModelConfig
-	private llmClient: ChatOpenAI
 
 	constructor(configOverride?: ModelConfig) {
 		this.config = { ...config, ...configOverride }
 
-		this.llmClient = new ChatOpenAI({
+		this.client = new OpenRouter({
 			apiKey: this.config.apiKey,
-			model: this.config.models.at(0),
-			temperature: this.config.temperature,
-			configuration: {
-				baseURL: "https://openrouter.ai/api/v1",
-				defaultHeaders: {
-					"HTTP-Referer": this.config.httpReferer,
-					"X-Title": this.config.xTitle,
-				},
-			},
-
-			// here goes the open router config (smart model)
-			modelKwargs: {
-				models: this.config.models,
-				provider: this.config.provider,
-			},
+			httpReferer: this.config.httpReferer,
+			xTitle: this.config.xTitle,
 		})
 	}
 
@@ -47,26 +34,51 @@ export class OpenRouterService {
 		schema: z.ZodSchema<T>,
 	) {
 		try {
-			const agent = createAgent({
-				model: this.llmClient,
-				tools: [],
-				responseFormat: providerStrategy(schema),
+			const response = await this.client.chat.send({
+				models: this.config.models,
+				messages: [
+					{
+						role: "system",
+						content: `${systemPrompt}\n\nRespond with valid JSON only. No markdown fences or extra text.`,
+					},
+					{ role: "user", content: userPrompt },
+				],
+				stream: false,
+				temperature: this.config.temperature,
+				provider: {
+					sort: {
+						by: "throughput",
+					},
+				},
+				responseFormat: { type: "json_object" },
 			})
-			const messages = [
-				new SystemMessage(systemPrompt),
-				new HumanMessage(userPrompt),
-			]
-			const data = await agent.invoke({ messages })
+
+			const rawContent = response.choices.at(0)?.message.content
+			const content =
+				typeof rawContent === "string"
+					? rawContent
+					: rawContent
+							?.map((part) => ("text" in part ? part.text : ""))
+							.join("")
+
+			if (!content) {
+				return {
+					success: false as const,
+					error: "Empty response from model",
+				}
+			}
+
+			const data = schema.parse(parseJsonContent(content))
 
 			return {
-				success: true,
-				data: data.structuredResponse,
+				success: true as const,
+				data,
 			}
 		} catch (error) {
 			console.error("Error OpenRouterService", error)
 
 			return {
-				success: false,
+				success: false as const,
 				error: error instanceof Error ? error.message : String(error),
 			}
 		}

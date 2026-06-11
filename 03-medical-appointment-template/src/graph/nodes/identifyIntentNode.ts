@@ -31,14 +31,10 @@ export function createIdentifyIntentNode(llmClient: OpenRouterService) {
 
 			const intentData = result.data!
 			console.log(`✅ Intent identified: ${intentData.intent}`)
-			return {
-				...state,
-				...intentData,
-			}
+			return intentData
 		} catch (error) {
 			console.error("❌ Error in identifyIntent node:", error)
 			return {
-				...state,
 				intent: "unknown",
 				error:
 					error instanceof Error
