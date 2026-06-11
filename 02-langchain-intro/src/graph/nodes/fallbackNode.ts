@@ -1,13 +1,7 @@
-import { AIMessage } from "langchain"
-import { type GraphStateUpdate } from "../graph.ts"
+import type { GraphNode } from "@langchain/langgraph"
+import { type GraphStateSchema } from "../state.ts"
 
-export const fallback = (): GraphStateUpdate => {
-	const message =
-		"Unknown command. Try 'make this uppercase' or 'convert to lowercase'"
-	const aiMessage = new AIMessage(message)
-
-	return {
-		output: message,
-		messages: [aiMessage],
-	}
-}
+export const fallback: GraphNode<typeof GraphStateSchema> = () => ({
+	output:
+		"Unknown command. Try 'make this uppercase' or 'convert to lowercase'",
+})

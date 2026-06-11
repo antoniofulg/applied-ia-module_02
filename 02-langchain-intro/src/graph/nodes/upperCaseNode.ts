@@ -1,9 +1,6 @@
-import { type GraphState, type GraphStateUpdate } from "../graph.ts"
+import type { GraphNode } from "@langchain/langgraph"
+import { type GraphStateSchema } from "../state.ts"
 
-export const upperCase = (state: GraphState): GraphStateUpdate => {
-	const responseText = state.output.toUpperCase()
-
-	return {
-		output: responseText,
-	}
-}
+export const upperCase: GraphNode<typeof GraphStateSchema> = (state) => ({
+	output: state.output.toUpperCase(),
+})

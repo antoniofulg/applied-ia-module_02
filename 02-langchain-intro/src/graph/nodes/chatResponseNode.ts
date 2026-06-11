@@ -1,9 +1,9 @@
-import { AIMessage } from "langchain"
-import { type GraphState, type GraphStateUpdate } from "../graph.ts"
+import { AIMessage } from "@langchain/core/messages"
+import type { GraphNode } from "@langchain/langgraph"
+import { type GraphStateSchema } from "../state.ts"
 
-export const chatResponse = (state: GraphState): GraphStateUpdate => {
-	const responseText = state.output
-	const aiMessage = new AIMessage(responseText)
+export const chatResponse: GraphNode<typeof GraphStateSchema> = (state) => {
+	const aiMessage = new AIMessage(state.output)
 
 	return {
 		messages: [aiMessage],

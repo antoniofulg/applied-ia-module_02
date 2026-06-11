@@ -1,29 +1,15 @@
-import {
-	StateSchema,
-	MessagesValue,
-	StateGraph,
-	START,
-	END,
-} from "@langchain/langgraph"
-import { z } from "zod"
+import { StateGraph, START, END } from "@langchain/langgraph"
 import { identifyIntent } from "./nodes/identifyIntentNode.ts"
 import { chatResponse } from "./nodes/chatResponseNode.ts"
 import { upperCase } from "./nodes/upperCaseNode.ts"
 import { lowerCase } from "./nodes/lowerCaseNode.ts"
 import { fallback } from "./nodes/fallbackNode.ts"
+import { GraphStateSchema, type GraphState } from "./state.ts"
 
-const State = new StateSchema({
-	messages: MessagesValue,
-	output: z.string(),
-	command: z.enum(["uppercase", "lowercase", "unknown"]),
-})
-
-export type GraphState = typeof State.State
-export type GraphStateUpdate = typeof State.Update
-export type GraphCommand = GraphState["command"]
+export type { GraphState, GraphStateUpdate, GraphCommand } from "./state.ts"
 
 export const buildGraph = () =>
-	new StateGraph(State)
+	new StateGraph(GraphStateSchema)
 		.addNode("identifyIntent", identifyIntent)
 		.addNode("chatResponse", chatResponse)
 		.addNode("upperCase", upperCase)
@@ -53,30 +39,3 @@ export const buildGraph = () =>
 		.addEdge("fallback", "chatResponse")
 		.addEdge("chatResponse", END)
 		.compile()
-
-// await graph.invoke({ messages: [{ role: "user", content: "hi!" }] })
-
-/// ------ class code ------- ///
-
-// const GraphState = z.object({
-// 	messages: withLangGraph(z.custom<BaseMessage[]>(), MessagesZodMeta),
-// 	output: z.string(),
-// 	command: z.enum(["uppercase", "lowercase", "unknown"]),
-// })
-
-// export type GraphState = z.infer<typeof GraphState>
-
-// export function buildGraph() {
-// 	const workflow = new StateGraph({
-// 		stateSchema: GraphState,
-// 	})
-// 		.addNode("identifyIntent", (state: GraphState) => {
-// 			return {
-// 				...state,
-// 			}
-// 		})
-// 		.addEdge(START, "identifyIntent")
-// 		.addEdge("identifyIntent", END)
-
-// 	return workflow.compile()
-// }

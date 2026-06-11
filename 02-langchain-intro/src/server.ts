@@ -1,6 +1,6 @@
 import Fastify from "fastify"
 import { buildGraph } from "./graph/graph.ts"
-import { HumanMessage } from "langchain"
+import { HumanMessage } from "@langchain/core/messages"
 
 const graph = buildGraph()
 export const createServer = () => {
