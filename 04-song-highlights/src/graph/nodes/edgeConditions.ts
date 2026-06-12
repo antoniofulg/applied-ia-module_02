@@ -1,8 +1,11 @@
-import type { GraphState } from '../graph.ts';
+import type { GraphState } from "../graph.ts"
 
 export const routeAfterChat = (state: GraphState): string =>
-  state.extractedPreferences ? 'savePreferences' :
-  state.needsSummarization ? 'summarize' : 'end';
+	state.extractedPreferences
+		? "savePreferences"
+		: state.needsSummarization
+			? "summarize"
+			: "end"
 
 export const routeAfterSavePreferences = (state: GraphState): string =>
-  state.needsSummarization ? 'summarize' : 'end';
+	state.needsSummarization ? "summarize" : "end"
