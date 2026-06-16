@@ -8,6 +8,7 @@ import {
 } from "../../prompts/v1/chatResponse.ts"
 import { AIMessage, HumanMessage } from "langchain"
 import { PreferencesService } from "../../services/preferencesService.ts"
+import { config } from "../../config.ts"
 
 export function createChatNode(
 	llmClient: OpenRouterService,
@@ -47,12 +48,16 @@ export function createChatNode(
 			}
 		}
 		const response = result.data
+
+		const totalMessages = state.messages.length
+		const needsSummarization = totalMessages >= config.maxMessagesToSummary
+
 		return {
 			messages: [new AIMessage(response.message)],
 			extractedPreferences: response.shouldSavePreferences
 				? response.preferences
 				: undefined,
-			needsSummarization: false,
+			needsSummarization,
 		}
 	}
 }
