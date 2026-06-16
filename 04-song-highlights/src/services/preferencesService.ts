@@ -1,5 +1,4 @@
-import { knex } from "knex"
-import type { Knex } from "knex"
+import knex, { type Knex } from "knex"
 import type { ConversationSummary } from "../prompts/v1/summarization.ts"
 import type { UserPreferences } from "../prompts/v1/chatResponse.ts"
 
