@@ -3,7 +3,6 @@ import { config } from "../config.ts"
 import { SystemMessage, HumanMessage } from "@langchain/core/messages"
 import type { z } from "zod/v3"
 import { createAgent, providerStrategy } from "langchain"
-import { type QueryAnalysisData } from "../prompts/v1/queryAnalyzer.ts"
 
 export type LLMResponse = {
 	model: string
@@ -54,7 +53,7 @@ export class OpenRouterService {
 			const data = await agent.invoke({ messages })
 			return {
 				success: true,
-				data: data.structuredResponse as QueryAnalysisData,
+				data: data.structuredResponse as T,
 			}
 		} catch (error) {
 			return {
